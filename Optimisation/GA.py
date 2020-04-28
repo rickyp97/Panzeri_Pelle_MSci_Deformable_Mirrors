@@ -11,7 +11,7 @@ import datetime
 from PIL import Image
 import fitness_functions
 
-# %% functions
+# %% Genetic Algorithm
 def optimise(f,data_directory,x0,max_iters,population_size,num_parents,variability):
     time_start = datetime.datetime.now()
     t0 = time.time()

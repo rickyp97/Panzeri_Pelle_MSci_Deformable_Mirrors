@@ -85,11 +85,9 @@ def neighbour(x,step_size):
 def accept(E,E_new,T):
     if E_new > E:
         return True
-    else:
-        return False
     
-    # p = np.exp(-(E-E_new)/T)
-    # if p >= np.random.uniform(0,1):
-    #     return True
-    # else:
-    #     return False
+     p = np.exp(-(E-E_new)/T)
+     if p >= np.random.uniform(0,1):
+         return True
+     else:
+         return False

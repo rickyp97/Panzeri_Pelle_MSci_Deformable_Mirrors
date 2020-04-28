@@ -2,7 +2,11 @@
 """
 Created on Fri Jan 31 16:31:24 2020
 
-@author: matte
+@author: Matteo Panzeri
+
+Code which implements 4 fitness functions. Code takes a DM setting as a list of 5 integers as input and returns value of fitness.
+The code uses the pc_client_functions module to communicate with the Raspberry Pi and the SMXM7X module to communicate with the camera.
+Make sure that BOTH the SMXM7X.pyd and the SMXM7X.dll files are present in the directory containing this script, and that you are running this in 32-bit python
 """
 
 import time
@@ -10,12 +14,12 @@ import numpy as np
 from PIL import Image
 import scipy.optimize as opt
 import sys
-sys.path.append('../')
+sys.path.append('../Client_server') #use this to tell python where to find the pc_client_functions module
 import pc_client_functions
 
 
+# Set up the SMXM7X camera
 print("Importing SMXM7X module...")
-sys.path.append("C:/Users/matte/Desktop/OneDrive - Imperial College London/Imperial/Year 4/Msci Project/Deformable Mirrors/SMXM7X_API")
 try:
     import SMXM7X
 except Exception as ex:
@@ -33,7 +37,7 @@ height = frameParams['Height']
 print(camera.GetFrameParams())
 print("Done!")
 
-
+# send a mirror setting to the Raspberry Pi
 def send_setting(setting):
     print("sending setting:", setting)
     channels = list(range(1,len(setting)+1))  #send to first n channels
@@ -42,6 +46,7 @@ def send_setting(setting):
     time.sleep(0.5)
     return
 
+#crop image around centre
 def crop_image(img,w):
     #compute image centre using marginal distributions
     x_distr_marginal = np.sum(img,axis=0)/np.sum(img)
@@ -50,6 +55,7 @@ def crop_image(img,w):
     img_cropped = img[c[1]-w:c[1]+w+1, c[0]-w:c[0]+w+1]
     return img_cropped
 
+#take a picture from the camera, cropping and averaging
 def get_image(n_avg=10,w=300):
     #average over a few images
     img_sum = np.zeros((2*w+1,2*w+1), dtype=np.uint64)
@@ -62,6 +68,7 @@ def get_image(n_avg=10,w=300):
     #image_grayscale = np.array(Image.fromarray(img_avg).convert('LA'))[:,:,0]
     return img_avg
 
+# fitness function using cumulative intensity distribution
 def cumulative_distribution(setting):
     #send setting and retrieve image
     try:
@@ -96,54 +103,13 @@ def cumulative_distribution(setting):
     #return fitness
     return(np.trapz(np.cumsum(radial_intensity)))#/np.amax(np.cumsum(radial_intensity))))
 
-def central_variance(setting):
-    #send setting and retrieve image
-    send_setting(setting)
-    img = get_image()
-    
-    #compute image centre using marginal distributions
-    x_distr_marginal = np.sum(img,axis=0)/np.sum(img)
-    y_distr_marginal = np.sum(img,axis=1)/np.sum(img)
-    c = (np.argmax(x_distr_marginal),np.argmax(y_distr_marginal))
-    x_distr_central = img[c[1],:]/np.sum(img[c[1],:])
-    y_distr_central = img[:,c[0]]/np.sum(img[:,c[0]])
-    
-    #compute variance
-    x = np.arange(2048)
-    y = np.arange(1536)
-    mu_x = np.sum(x_distr_central*x)
-    mu_y = np.sum(y_distr_central*y)
-    var_x = np.sum(x_distr_central*x**2)-mu_x**2
-    var_y = np.sum(y_distr_central*y**2)-mu_y**2
-    
-    fitness = np.sqrt(var_x) + np.sqrt(var_y)
-    return fitness
-
-def marginal_variance(setting):
-    #send setting and retrieve image
-    send_setting(setting)
-    img = get_image()
-    
-    x_distr = np.sum(img,axis=0)/np.sum(img)
-    y_distr = np.sum(img,axis=1)/np.sum(img)
-    x = np.arange(2048)-1024
-    y = np.arange(1536)-768
-    
-    #compute variance
-    mu_x = np.sum(x_distr*x)
-    mu_y = np.sum(y_distr*y)
-    var_x = np.sum(x_distr*x**2)-mu_x**2
-    var_y = np.sum(y_distr*y**2)-mu_y**2
-    
-    fitness = np.sqrt(var_x) + np.sqrt(var_y)
-    return fitness
-
+# Fitness function using numerical methods to compute focal spot effective area
 def intensity_central(setting):
     try:
         send_setting(setting)
         img = get_image()
     except:
-        print("jkfkhfkjdfkjsdh")
+        print("##############\nAn exception occurred while calculating numerical fitness!\n##############")
         return 0
     
     #compute image centre using marginal distributions
@@ -173,13 +139,14 @@ def intensity_central_img(img):
 def gaussian(x,A,mu,sigma):
     return A*np.exp(-((x-mu)**2/(2*(sigma)**2)))
 
+# Fitness functions using gaussian fit to compute effective area
 def fitness_gaussian(setting):
     #send setting and retrieve image
     try:
         send_setting(setting)
         img = get_image()
     except:
-        print("jkfkhfkjdfkjsdh")
+        print("##############\nAn exception occurred while calculating gaussian fitness!\n##############")
         return 0
     
     #compute image centre using marginal distributions
@@ -213,6 +180,7 @@ def fitness_gaussian_img(img, return_all = False):
         return fitness, I_total, I_max, FWHM_x, FWHM_y, mu_x, mu_y, Amplitude_x, Amplitude_y
     return fitness
 
+# Sum of squares fitness function
 def sum_of_squares(setting):
     #send setting and retrieve image
     try:
