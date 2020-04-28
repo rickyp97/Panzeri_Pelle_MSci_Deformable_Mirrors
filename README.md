@@ -14,15 +14,15 @@ Our system specifications and files/programs used:
 
 The SMX7MX.h, SMXM7X.c, SMXM7X.cpp and associated SMXM7X.dll contain the camera source code. In particular, refer to the SMXM7X.h for a full list of available functionality. The SMXM7X.pyx and SMX7MX.pxd file contain the pseudo-C/python code written to use the original C/C++ code in python. To compile these files, run the setup.py file in a command line as follows:
 
-'''
+```
 python setup.py build_ext --inplace
-'''
+```
 
 This will produce a file called SMXM7X.pyd, which behaves like a standard python module. Copy this file and the SMXM7X.dll file to the same location as your python script. An example on how a to use python to take a picture is given below, and in the example module called "testmodule.py".
 
-'''python
+```python
 import SMXM7X
 camera = SMXM7X.Cam()
 camera.OpenDevice()
 snap = camera.GetSnapshot()
-'''
+```
