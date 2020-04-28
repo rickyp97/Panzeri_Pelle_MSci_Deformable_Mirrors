@@ -12,7 +12,7 @@ This module will import "pi_server_functions.py", which also needs the two modul
 On the Laptop side, you can either use a simple GUI to change channel voltages ("GUI_laptop.py", simply run it to open the GUI) or run the "pc_server_functions.py" module and use the functions within to communicate with the Pi.
 
 ## Optimisation
-To run one of the three optimisation codes, in a python script import the fitness_functions module, and the required optimisation algorithm. Then use the "optimise" function in the optimisation algorithm's module, passing as a first argument one of the fitness functions from the fitness_functions module.
+To run one of the three optimisation codes, in a python script import the fitness_functions module, and the required optimisation algorithm. Then use the "optimise" function from the optimisation algorithm's module, passing as a first argument one of the fitness functions from the fitness_functions module.
 
 ## SMXM7X API
 The SMXM7X API folder contains scripts for using a Sumix M7x model (M71,M72,M73) CMOS camera in Python scripts. It was coded following [this](https://riptutorial.com/cython/example/11296/wrapping-a-dll--cplusplus-to-cython-to-python) tutorial. Please recompile these files before using the camera.
