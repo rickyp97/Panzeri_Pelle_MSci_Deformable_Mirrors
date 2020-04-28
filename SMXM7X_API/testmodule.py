@@ -1,4 +1,4 @@
-import SMXM7X
+import SMXM7X               #SMXM7X.pyd and SMX7MX.dll files should be in same directory as this file
 import matplotlib.pyplot as plt
 from PIL import Image
 import time
@@ -11,8 +11,8 @@ camera.SetStreamMode(0)
 camera.SetAllGain(0)
 camera.SetExposure(0.35)
 snap = camera.GetSnapshot()
-#print(snap.shape)
-#plt.imshow(snap)
+print(snap.shape)
+plt.imshow(snap)
 for i in range(10):
     print(i)
     camera.SaveSnapshot("", "test.bmp")
