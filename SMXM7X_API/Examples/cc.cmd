@@ -1,0 +1,1 @@
+cl /O2 /MT %1 SMXM7X.lib user32.lib gdi32.lib kernel32.lib %2 %3

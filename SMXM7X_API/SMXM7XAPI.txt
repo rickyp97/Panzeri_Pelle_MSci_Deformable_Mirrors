@@ -1,0 +1,864 @@
+[English]
+SMXM7XAPI.txt                     SUMIX Corp.                     27/04/2005
+
+                        The SMX-M7X Series Camera API 
+                  Sumix SMX-M7X Series USB2.0 Camera Driver
+                            for Windows 2000/XP
+                                Release 1.81
+
+
+Contents
+========
+
+- Using the API
+- Modification
+- Adjustable Camera Parameters
+- Data Structures
+- Function Reference
+- Revision History
+- Contact Information
+
+
+
+Using the API
+=============
+
+Usage of SMXM7X family API is quite simple. 
+
+C:
+Use the header file SMXM7X.h. The header file contains functions of camera
+API library and necessary data structures. You should include to your project
+import library SMXM7X.lib for SMXM7X.DLL .
+
+C++:
+Use the header file SMXM7X.h. The header file contains class CSumixCam the wrapper for the camera API library and also contains necessary data structures.
+The DLL is loaded automatically within CSumixCam constructor. 
+
+Delphi:
+Use the module SMXM7X.pas which imports the SMXM7X API library and defines
+necessary data structures.
+
+
+
+Modification
+============
+
+C:
+Modification to user's header/source file(s): 
+
+    #include <SMXM7X.h>
+
+Here is the sample use of camera API library:
+
+    TFrameParams Params;
+    HANDLE H = CxOpenDevice( 0 ); // open camera #0
+    // now do something useful
+    CxGetScreenParams(H, &Params);
+    CxCloseDevice(H);
+
+
+C++:
+Modification to user's header/source file(s): 
+
+    #include <SMXM7X.h>
+    ...
+    CSumixCam m_camera; 
+
+Here is the sample use of CsumixCam class:
+
+    long Handle;
+    float ExposureMin, ExposureMax;
+    TFrameParams Params;
+    m_camera.Initialize(); // loads dll and initializes the functions
+    Handle = m_camera.CxOpenDevice(0); // opend the device
+    // now do something useful
+    m_camera.CxGetScreenParams(Handle, &Params);
+    m_camera.CxGetExposureMinMaxMs(Handle, &ExposureMin, &ExposureMax);
+    m_camera.CxCloseDevice(Handle);
+    m_camera.Shutdown(); // unloads the dll 
+
+
+Delphi:
+Modification to user's source file(s): 
+
+    uses SMXM7X;
+
+
+Note: You must have the DLL file SMXM7X.dll installed in the project 
+exe directory or anywhere on the system's search path.
+
+
+Adjustable Camera Parameters
+=============================
+
+Exposure: Sets the exposure time of the sensor. The exposure time needed 
+          to get required image quality depends on the viewport settings, 
+          sensor timing and decimation.
+ 
+Functions: 
+    	  CxGetExposure, CxGetExposureMs, CxSetExposure, CxSetExposureMs, CxGetExposureMinMax
+
+
+Gain:     Sets the sensor gain for Main, R(ed), G(reen) and B(lue) sensor channels. 
+Functions: CxGetGain, CxSetGain, CxSetAllGain
+
+
+Viewport: Defines viewport area inside sensor area. The viewport is
+          the sensor part from which the image is being scanned, so the camera 
+          provides frames within the viewport.
+Functions: CxGetScreenParams, CxSetScreenParams. See TFrameParams structure for more information.
+
+
+Picture Mirroring: The picture can be flipped horizontally and vertically.
+Functions:  CxGetScreenParams, CxSetScreenParams. 
+            See TFrameParams structure for more information.
+
+
+Frequency: Defines the sensor frequency.
+Functions: CxGetFrequency, CxSetFrequency
+
+
+Decimation: The camera sensor has the ability to decimate the image by 2. 
+            It reduces the amount of scanned lines by 2 correspondingly, 
+            thus increasing the frame rate. The decimated image can be 
+            used in previews, or in application where the speed is more
+            important than image accuracy.
+Functions:  CxGetScreenParams, CxSetScreenParams. 
+            See TFrameParams structure for more information.
+
+
+Brightness, Contrast, Gamma:  The camera firmware has the ability to 
+            programmatically correct the picture according to the 
+            Brightness, Contrast and Gamma values. The correction does 
+            not change the sensor settings and does not effect performance.
+Functions: CxSetBrightnessContrastGamma
+ 
+
+
+Data Structures
+=============== 
+
+typedef struct _TFrameParams {
+     int StartX,StartY; // start position
+     int Width,Height;  // of frame
+     int Decimation;    // 1,2,4,8 (for SMX-M71 and SMX-M72); 1,2,3,4,5,6,7,8,-2,-3,-4 (for SMX-M73)
+     int ColorDeep;     // 8 or 24
+     BOOLEAN MirrorV;   // vertical
+     BOOLEAN MirrorH;   // horizontal
+} TFrameParams, *PFrameParams;
+
+Structure Members:
+
+StartX      32-bit integer, viewport offset from the left side of 
+            full sensor area, in pixels.
+            The sensor have 1280x1024 pixels depending on camera model. 
+            This value should be divisible by 2.
+
+StartY      32-bit integer, viewport offset from the top of 
+            full sensor area, in pixels.
+
+Width       32-bit integer, the viewport width, in pixels. 
+            This value should be divisible by 2 and should 
+            not exceed the sensor width. 
+
+Height      32-bit integer, the viewport height, in pixels. 
+            This value should not exceed the sensor height. 
+
+Decimation  32-bit integer, the image decimation. 
+			Valid values are 1 (no decimation), 2,4,8 for SMX-M71 and SMX-M72;
+			1,2,3,4,5,6,7,8,-2,-3,-4 (for SMX-M73)
+
+ColorDeep   32-bit integer, reserved
+
+MirrorV     BYTE, vertical mirroring flag. 0 if no mirroring.
+
+MirrorH     BYTE, horizontal mirroring flag. 0 if no mirroring.
+
+Note: When using the Color camera (SMXM7XC) in mirroring mode, actual 
+      StartX and StartY values are not divisible by 2 (1 pixel added). 
+      This is hardware-specific behaviour due to the sensor mosaic structure. 
+      Thus, valid values are 1,5,9 : 
+ 
+
+typedef struct _TCameraInfo {
+    int SensorType;
+    int MaxWidth;
+    int MaxHeight;
+    char DeviceName[64];
+} TCameraInfo;
+
+This structure is filled by CxGetCameraInfo function.
+
+Structure Members:
+
+SensorType  32-bit integer, type of the sensor used in the camera. 
+            0 - Black and White. 1 - Color.
+
+MaxWidth    32-bit integer, the sensor width, in pixels.
+
+MaxHeight   32-bit integer, the sensor height, in pixels.
+
+DeviceName  An array of char type, containing the device name 
+            as a null-terminated string.
+
+
+typedef struct _TCameraInfoEx {
+    unsigned short HWModelID;
+    unsigned short HWVersion;
+    unsigned long HWSerial;
+    unsigned char Reserved[5];
+} TCameraInfoEx;
+
+This structure is filled by CxGetCameraInfoEx function.
+
+Structure Members:
+
+HWModelID   16-bit integer, Hardware Model ID
+
+HWVersion   16-bit integer, Hardware Version ID
+
+HWSerial    32-bit integer, Camera Serial Number
+            
+ 
+
+Function Reference
+================== 
+
+CxOpenDevice
+
+Opens the camera device
+
+Parameters:
+DeviceID    32-bit integer; can be 0..36
+
+Return Value:
+A handle to the camera device if succeded; use this handle in subsequent 
+calls to the API functions;
+-1(INVALID_HANDLE_VALUE) if failed  (no camera on this DeviceID)
+
+Remarks:
+This function can be used to determine on which ID the cameras is present 
+when using multiple cameras. For this, call the CxOpenDevice with DeviceID 
+from 0 to 36 and see where handles are valid.
+Close the device handle when it is no longer needed using CxCloseDevice function. 
+The good practice is opening the device before any function call and closing 
+immediately after the function call(s). Such approach allows to build the programs 
+that do not need to restart if the USB device disconnects/connects during the program 
+execution.
+
+
+
+CxCloseDevice
+
+Closes the camera device
+
+Parameters:
+DeviceHandle    32-bit integer value previously returned by CxOpenDevice function
+
+
+
+CxGetScreenParams
+
+Reads the camera screen parameters from the device
+
+Parameters:
+DeviceHandle    32-bit integer value previously returned by CxOpenDevice function
+pScreenParams   32-bit pointer to the TFrameParams structure that receives the data
+
+Return Value:
+Nonzero if successful
+
+See also: TFrameParams structure description, CxSetScreenParams function
+
+
+ 
+
+CxSetScreenParams
+
+Sets the new screen parameters to the device
+
+Parameters:
+DeviceHandle    32-bit integer value previously returned by CxOpenDevice function
+pScreenParams   32-bit pointer to the TFrameParams structure that contains the data
+
+Return Value:
+Nonzero if successful
+
+Remarks:
+The function CxActivateScreenParams should be called after the CxSetScreenParams for the 
+new settings to take effect.
+
+See also: TFrameParams, CxSetScreenParams,  CxActivateScreenParams
+
+
+
+CxActivateScreenParams
+
+Activates the new screen parameters that were passed to the device in previously 
+CxSetScreenParams function call
+
+Parameters:
+DeviceHandle    32-bit integer value previously returned by CxOpenDevice function
+
+Return Value:
+Nonzero if successful
+
+See also: CxSetScreenParams
+
+
+
+CxGetExposure
+
+Reads the current exposure value from the camera
+
+Parameters:
+DeviceHandle    32-bit integer value previously returned by CxOpenDevice function
+pExposureValue  pointer to the 32-bit integer that receives the exposure value
+
+Return Value:
+Nonzero if successful
+
+Remarks: The obtained exposure value can be used as parameter to the CxSetExposure function.
+
+
+
+CxSetExposure
+
+Sets the exposure value to the camera
+
+Parameters:
+DeviceHandle    32-bit integer value previously returned by CxOpenDevice function
+ExposureValue   32-bit integer value containing the exposure value
+
+Return Value:
+Nonzero if successful
+
+Remarks:
+To get the valid range of ExposureValue, use CxGetExposureMinMax function
+
+
+
+CxGetExposureMs
+
+Reads the current exposure value in milliseconds from the camera
+
+Parameters:
+DeviceHandle    32-bit integer value previously returned by CxOpenDevice function
+pExposureValue  pointer to the variable of type float that receives the exposure value
+
+Return Value:
+Nonzero if successful
+
+
+
+CxSetExposureMs
+
+Sets the current exposure value in milliseconds from the camera
+
+Parameters:
+DeviceHandle    32-bit integer value previously returned by CxOpenDevice function
+ExposureValue   the variable of type float that contains Exposure value in milliseconds
+pSetExpValue    pointer to the variable of type float that receives the exposure value was real set 
+
+Return Value:
+Nonzero if successful
+
+Remarks: To get the valid range of ExposureValue, use CxGetExposureMinMaxMs function
+
+
+
+CxGetExposureMinMax
+
+Calculates the valid range of exposure value for given camera type and screen parameters
+
+Parameters:
+DeviceHandle    32-bit integer value previously returned by CxOpenDevice function
+pExposureMin    pointer to the variable of type int that receives the minimal exposure value
+pExposureMax    pointer to the variable of type int that receives the maximal exposure value
+
+Return Value:
+Nonzero if successful
+
+
+
+CxGetExposureMinMaxMs
+
+Obtains the valid range of exposure value in milliseconds for given camera type and screen parameters
+
+Parameters:
+DeviceHandle    32-bit integer value previously returned by CxOpenDevice function
+pExposureMin    pointer to the variable of type float that receives the minimal exposure value
+pExposureMax    pointer to the variable of type float that receives the maximal exposure value
+
+Return Value:
+Nonzero if successful
+
+
+
+CxGetFrequency
+
+Reads the current sensor frequency from the camera
+
+Parameters:
+DeviceHandle    32-bit integer value previously returned by CxOpenDevice function
+pFreqValue      pointer to the variable of type BYTE that receives the frequency value
+
+Return Value:
+Nonzero if successful
+
+Remarks:
+The Frequency value meaning:
+    0: 40 MHz on the sensor
+    1: 24 MHz on the sensor
+    2: 20 MHz on the sensor
+    3: 16 MHz on the sensor
+    4: 13.33 MHz on the sensor
+    5: 12 MHz on the sensor
+    6: 10 MHz on the sensor
+    7: 8 MHz on the sensor
+    8: 6.66 MHz on the sensor
+    9: 48 MHz on the sensor
+   10: 32 MHz on the sensor
+
+
+
+CxSetFrequency
+
+Sets the current sensor frequency
+
+Parameters:
+DeviceHandle    32-bit integer value previously returned by CxOpenDevice function
+FreqValue       variable of type BYTE containing the new frequency value
+
+Return Value:
+Nonzero if successful
+
+Remarks:
+The Frequency value meaning:
+    0: 40 MHz on the sensor
+    1: 24 MHz on the sensor
+    2: 20 MHz on the sensor
+    3: 16 MHz on the sensor
+    4: 13.33 MHz on the sensor
+    5: 12 MHz on the sensor
+    6: 10 MHz on the sensor
+    7: 8 MHz on the sensor
+    8: 6.66 MHz on the sensor
+    9: 48 MHz on the sensor
+   10: 32 MHz on the sensor
+
+
+
+CxGetStreamMode
+
+Gets the camera stream mode
+
+Parameters:
+DeviceHandle    32-bit integer value previously returned by CxOpenDevice function
+pStreamMode     pointer to the variable of type BYTE that receives the stream mode value
+
+Return Value:
+Nonzero if successful
+
+Remarks:
+The stream mode meaning:
+0:  the USB video stream is OFF
+1:  the USB video stream is ON
+2:  reserved
+See also: CxSetStreamMode function
+
+
+
+CxSetStreamMode
+
+Sets the camera stream mode on or off
+        
+Parameters:
+DeviceHandle    32-bit integer value previously returned by CxOpenDevice function
+StreamMode      variable of type BYTE that contains the stream mode value
+
+Return Value:
+Nonzero if successful
+
+Remarks:
+The stream mode meaning:
+0:  the USB video stream is OFF
+1:  the USB video stream is ON
+2:  reserved
+Before using any operation that requires camera video stream, 
+such as frame grabbing, a program should turn the video stream ON; 
+after the completion a video task, a program should turn the video stream OFF.
+The CxStartVideo function turns the stream ON automatically.
+
+See also: CxGetStreamMode function
+
+
+
+CxGrabVideoFrame
+
+Grabs the frame into the memory buffer. 
+        
+Parameters:
+DeviceHandle    32-bit integer value previously returned by CxOpenDevice function
+pBuf            pointer to the frame buffer that receives the data
+BufSize         32-bit integer value specifying the buffer size, in bytes
+
+Return Value:
+Nonzero if successful
+
+Remarks:
+The current frame dimensions are specified by Width and Height members of the 
+TFrameParams structure obtained by CxGetScreenParams function: 
+BufSize = Width*Height
+The video stream should be ON.
+
+See also: CxGetStreamMode, CxGetScreenParams, TFrameParams
+
+
+
+CxSetGain
+
+Sets the sensor gain. 
+        
+Parameters:
+DeviceHandle    32-bit integer value previously returned by CxOpenDevice function
+G1              32-bit integer, the Green1 channel gain
+R               32-bit integer, the Red channel gain
+G2              32-bit integer, the Green2 channel gain
+B               32-bit integer, the Blue channel gain
+
+Return Value:
+Nonzero if successful
+
+Remarks:
+The RGB Gain values should be in the range of 0..47 (for SMX-M71 and SMX-M72) or 0..160 (for SMX-M73).
+
+See also: CxGetGain
+
+
+
+CxGetGain
+
+Gets the sensor gain. 
+        
+Parameters:
+DeviceHandle    32-bit integer value previously returned by CxOpenDevice function
+pG1               pointer to 32-bit integer, the Green1 channel gain
+pR                pointer to 32-bit integer, the Red channel gain
+pG2               pointer to 32-bit integer, the Green2 channel gain
+pB                pointer to 32-bit integer, the Blue channel gain
+
+Return Value:
+Nonzero if successful
+
+Remarks:
+The RGB Gain values should be in the range of 0..47 (for SMX-M71 and SMX-M72) or 0..160 (for SMX-M73).
+
+See also: CxSetGain 
+
+
+
+CxSetAllGain
+
+Sets the sensor G1, R, G2 and B gains.
+        
+Parameters:
+DeviceHandle    32-bit integer value previously returned by CxOpenDevice function
+Main            32-bit integer, the All channel gain
+
+Return Value:
+Nonzero if successful
+
+Remarks:
+The All Gain values should be in the range of 0..47 (for SMX-M71 and SMX-M72) or 0..160 (for SMX-M73).
+
+See also: CxSetGain
+
+
+CxSetBrightnessContrastGamma
+
+Sets Brightness, Contrast and Gamma correction values to the camera. 
+        
+Parameters:
+DeviceHandle    32-bit integer value previously returned by CxOpenDevice function
+Brigtness       32-bit integer brightness value
+Contrast        32-bit integer contrast value
+Gamma           32-bit integer gamma correction value
+
+Return Value:
+Nonzero if successful
+
+Remarks:
+Brightness, Contrast and Gamma values are used for color correction
+by means of the camera firmware. They do not change any sensor parameters. 
+The valid values are in range of -127..127; the normal default values are 0 (no correction).
+
+
+
+CxSetConvertionTab
+
+Set convertion table to camera.
+
+Parameters:
+DeviceHandle    32-bit integer value previously returned by CxOpenDevice function
+ConvertionTab   pointer to array of 1024 bytes
+
+Return Value:
+Nonzero if successful
+
+Remarks:
+Convertion table transforms 10bit pixel data from sensor to 8bit stream format data
+
+
+
+CxGetConvertionTab
+
+Get convertion table from camera
+
+Parameters:
+DeviceHandle    32-bit integer value previously returned by CxOpenDevice function
+ConvertionTab   pointer to array of 1024 bytes
+
+Return Value:
+Nonzero if successful
+
+Remarks:
+Convertion table transforms 10bit pixel data from sensor to 8bit stream format data
+
+
+
+CxSetDefaultConvertionTab
+
+Set default convertion table from camera
+
+Parameters:
+DeviceHandle    32-bit integer value previously returned by CxOpenDevice function
+
+Return Value:
+Nonzero if successful
+
+Remarks:
+Convertion table transforms 10bit pixel data from sensor to 8bit stream format data
+Default table is : 0,1,2,3->0; 4,5,6,7->1 ... 1020,1021,1022,1023->255
+
+
+CxStartVideo
+
+Starts video display onto the specified window device context. 
+        
+Parameters:
+WindowDC        32-bit integer containing window DC on which to display the video
+DeviceID        32-bit integer value which is determines what camera to use (see CxOpenDevice function)
+
+Return Value:
+Nonzero if successful
+
+Remarks:
+This function sets camera stream to ON automatically, so there is no need to call 
+CxSetStreamMode before starting the video.
+
+
+
+CxStopVideo
+
+Stops the video previously started by CxStartVideo function. 
+        
+Parameters:
+DeviceID        32-bit integer value which determines the camera used (see CxOpenDevice function)
+
+Return Value:
+Nonzero if successful
+
+Remarks:
+This function sets camera stream to OFF automatically, so there is no need 
+to call CxSetStreamMode after stopping the video.
+
+
+CxSetBayerAlg
+
+Sets Bayer convertion algorithm for current CxStartVideo (SMXM7XC only)
+        
+Parameters:
+BayerAlg        32-bit integer value which specifies the Bayer convertion algorithm used
+
+Return Value:
+Nonzero if successful
+
+Remarks:
+The BayerAlg value meaning used Bayer convertion algorithm:
+0:Monochrome
+1:Nearest Neighbor
+2:Bilinear
+3:Laplacian
+4:Real Monochrome
+5:Bayer Average
+
+
+
+CxBayerToRgb
+
+Convert Bayer matrix to RGB 24bits color frame
+
+Parameters:
+pInBuf          pointer to the frame buffer with Bayer matrix
+Width           32-bit integer, the frame width, in pixels. 
+Height          32-bit integer, the frame height, in pixels.
+BayerAlg        32-bit integer value which specifies the Bayer convertion algorithm used
+pRGBOutBuf      pointer to the frame buffer with RGB24 Frame
+
+Return Value:
+Pointer to the frame buffer with RGB24 Frame if successful
+else NULL
+
+Remarks:
+The BayerAlg value meaning used Bayer convertion algorithm:
+0:Monochrome
+1:Nearest Neighbor
+2:Bilinear
+3:Laplacian
+4:Real Monochrome
+5:Bayer Average
+
+
+CxGetFrameCounter
+
+Reads the frame counter from the device. This function can be used to evaluate 
+current frame rate. The call to CxStartVideo resets the frame counter to 0.  
+        
+Parameters:
+DeviceID        32-bit integer value which specifies the camera used (see CxOpenDevice function)
+pFrameCounter   pointer to 32-bit unsigned integer receiving the frame counter value
+
+Return Value:
+Nonzero if successful
+
+
+CxGetCameraInfo
+
+Retrieves the camera information such as maximum sensor resolution, sensor type, camera name.
+        
+Parameters
+DeviceHandle    32-bit integer value previously returned by CxOpenDevice function
+pCameraInfo     a pointer to the TCameraInfo structure that receives the information
+
+Return Value:
+Nonzero if successful
+
+See also: TCameraInfo structure
+
+
+
+CxGetCameraInfoEx
+
+Retrieves the camera information, such as hardware model ID, version ID, serial number.
+        
+Parameters
+DeviceHandle    32-bit integer value previously returned by CxOpenDevice function
+pCameraInfoEx   a pointer to the TCameraInfoEx structure that receives the information
+
+Return Value:
+Nonzero if successful
+
+See also: TCameraInfoEx structure
+
+
+
+CxGetFramePtr
+
+Returns pointer to driver's frame memory buffer. 
+
+Parameters
+DeviceHandle    32-bit integer value previously returned by CxOpenDevice function
+
+Return Value:
+Pointer to driver's frame memory buffer if successful
+
+
+
+CxGetSnapshot
+
+Grabs the hardware snapshot into the memory buffer. 
+
+Parameters:
+DeviceHandle    32-bit integer value previously returned by CxOpenDevice function
+Timeout         32-bit integer value, wait timeout period, sec
+ExtTrgEnabled   boolean, TRUE if wait external event
+ExtTrgPositive  boolean, TRUE if wait positive level else negative
+SnapshotMode    boolean, reserved, always True
+pBuf            pointer to the frame buffer that receives the data
+BufSize         32-bit integer value specifying the buffer size, in bytes
+pRetLen         pointer to 32-bit unsigned integer receiving the return snapshot size
+
+Return Value:
+Nonzero if successful
+
+Remarks:
+This function requires to turn the video stream OFF.
+
+
+
+CxCancelSnapshot
+
+Cancels the hardware snapshot from camera.
+
+Parameters:
+DeviceHandle    32-bit integer value previously returned by CxOpenDevice function
+
+Return Value:
+Nonzero if successful
+
+Remarks: 
+This function requires the video stream to be turned OFF and CxGetSnapshot function to be called
+
+
+
+CxSet10BitsOutput
+
+Set frame format : 10 or 8 bits
+
+Parameters:
+DeviceHandle    32-bit integer value previously returned by CxOpenDevice function
+Use10Bits  		variable of type BOOLEAND containing the new Use10Bits value
+
+Return Value:
+Nonzero if successful
+
+Remarks:
+This function requires new version of firmware(>=XXXX.X.X.X.27).
+
+
+CxGet10BitsOutput
+
+Get frame format : 10 or 8 bits
+
+Parameters:
+DeviceHandle    32-bit integer value previously returned by CxOpenDevice function
+pUse10Bits  	pointer to variable of type BOOLEAND that receives the Use10Bits value
+
+Return Value:
+Nonzero if successful
+
+Remarks:
+This function requires new version of firmware(>=XXXX.X.X.X.27).
+
+
+Revision History
+================        
+1.31 - 12/08/2004  - first public version
+1.4  - 01/04/2005  - Snapshot function implemented
+1.5  - 27/04/2005  - Set10BitsOutput and Get10BitsOutput function implemented
+
+The information provided above is subject to change. 
+Please check the http://www.sumix.com for updates.
+
+
+Contact Information
+===================
+
+Sumix Corporation 
+3403 Southwood Dr.
+Oceanside, CA 92054
+Tel.: (760)458 5321
+Fax: (508)300 5526
+E-mail: info@sumix.com
+WWW: http://www.sumix.com/optic
