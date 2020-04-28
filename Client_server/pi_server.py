@@ -1,3 +1,8 @@
+''' This is the code that has to be run on the Pi. Simply run this module and the client should be able to connect and send requests.
+It needs the module pi_server_functions which needs to be imported. This code runs in loop until shut down from the client or interrupted
+by force (might need to close the kernel if it gets stuck)
+'''
+
 import socket               
 from datetime import datetime
 import os
@@ -6,8 +11,8 @@ import pickle
 
 s = socket.socket()         # Create a socket object
 #s.settimeout(100)          #set timeout
-host = '192.168.137.117'          # Get pc ip address
-port = 12345                # Reserve a port for your service.
+host = '192.168.137.117'          # Pi ip address, the same that will be written on pc_client_functions
+port = 12345                # Reserve a port for your service. same that will be written in pc_client_functions
 s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR,1)
 
 s.bind((host, port))        # Bind to the port
@@ -22,8 +27,6 @@ while True:
         servfunc.setconfig(c)
     elif l == "config_all":
         servfunc.setconfig_all(c)                       
-#    elif l == 'runGA':
-#        servfunc.runGA(c)
     elif l == 'stop':
         servfunc.shutdownserver(c)
         break

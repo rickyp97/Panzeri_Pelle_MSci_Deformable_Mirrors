@@ -1,25 +1,19 @@
-import os
+''' functions used by pi_server. as these are the ones that send outputs to the DAC from the Pi, it needs one of the DAC_control files,
+either v1 or fast_off. they need to be imported, so either put them in the same folder or add the folder path.'''
+
+
 import traceback
-import sys
-
-sys.path.append('/home/pi/deformable_mirrors/GA_code')
 
 import sys
-sys.path.append('/home/pi/deformable_mirrors/Pi_code')
+sys.path.append('folder path')    #use this to add the path to the folder where the DAC_control file is 
 #import DAC_control_v1 as dac
-import DAC_control_v2_fast_off as dac
+import DAC_control_fast_off as dac   #use this module, which has the fast-off mode implemented. if you are not using fast off, the fastoff argument taken by some functions should be 'off'.
 
 import numpy as np
 import socket
-import time
 import pickle
 
-#import GAtest_december 
-
-#picturesdirect = 'C:/Users/riccardo/Desktop'
-picturesdirect = 'C:/Users/matte/Desktop/ServerData'
-
-def setconfig(client):  
+def setconfig(client):          #sets the values received from the client on the DAC
     try:
         bits = client.recv(4096)
         l = pickle.loads(bits)
@@ -29,22 +23,17 @@ def setconfig(client):
         Dac = l[2]
         valueflag = l[3]
         fastoff = l[4]
-        #l = bits.split(b'.')
-        #values = pickle.loads(l[0]+b'.')
-        #channels = pickle.loads(l[1]+b'.')
-        #Dac = pickle.loads(l[2]+b'.')
-        #valueflag = pickle.loads(l[3]+b'.')
         
         print(values,channels,Dac,valueflag)
         for n in range(len(channels)):
-            if Dac[n] == 'DAC1':
+            if Dac[n] == 'DAC1':            # always use 'DAC1' until you have added more DACs 
                 board = dac.DAC1
             elif Dac[n] == 'DAC2':
                 board == dac.DAC2
-            if valueflag == "Voltage":
+            if valueflag == "Voltage":      # if you are giving values as voltages
                 dac.setVoltage(board, int(channels[n]), int(values[n]), fastoff)
                 print("voltage is" , values[n], 'on', channels[n])
-            elif valueflag == "Duty":
+            elif valueflag == "Duty":           # if you are giving values as duty cycle 0-4095
                 dac.setValue(board, channels[n], values[n],fastoff)
                 print("duty is", values[n], 'on', channels[n])
             else:
@@ -62,7 +51,7 @@ def setconfig(client):
         client.close()
         return
     
-def setconfig_all(client):
+def setconfig_all(client):  #sends all the configs received from the client to the DAC.
     try:
         bits = client.recv(4096)
         l = pickle.loads(bits)
@@ -80,32 +69,14 @@ def setconfig_all(client):
     except Exception as ex:
         print (ex)
         print(traceback.format_exc())
-        print("LOLOLOL")
         bye = pickle.dumps('something went wrong')
         client.send(bye)
         client.close()
         return
-def shutdownserver(client):                 
+    
+def shutdownserver(client):                 #closes the server, which stops running
      message = 'Server shutting down'
      client.send(pickle.dumps(message))
      client.close()
      return
 
-#def runGA(client):
-#     max_iters = client.recv(1024).decode()
-#     print (max_iters)
-#     population_size = client.recv(1024).decode()
-#     print (population_size)
-#     num_parents = client.recv(1024).decode()
-#     print (num_parents)
-#     variability = client.recv(1024).decode()
-#     print (variability)
-#     initial_population_list = client.recv(1024)
-#     initial_population = np.array(pickle.loads(initial_population_list))
-#     print (initial_population, type(initial_population), initial_population.shape)
-#     GAtest_december.optimise(client, int(max_iters),int(population_size),int(num_parents),int(variability),initial_population)
-#     message = 'GA done\n'
-#     client.send(pickle.dumps(message))
-#     time.sleep(0.1)
-#     client.close()
-#     return
