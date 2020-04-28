@@ -1,4 +1,16 @@
 # Deformable Mirrors
+This repository contains the code which was used throughout the project to control a 5 channels deformable mirror and use it to optimise the focal spot of a low power test laser.
+
+## Controlling the Pi
+As the DAC board is controlled directly from the Raspberry Pi, the modules "DAC_control_fast_off.py" and "ServoPi.py" contain the commands to change the Pi outputs. 
+
+## Server-Client
+As part of the code was ran on a Raspberry Pi 3 and part on a laptop, we set up a simple server-client comunication within the two, with the Pi being the server.
+To run the server, simply use a Python 3 shell to run on the Pi the module called "pi_server.py". This will run in a loop waiting for connections from the laptop. Make sure to change the Host variable, which should be the IP address of the Pi.
+This module will import "pi_server_functions.py", which also needs the two modules that control the Pi output: "DAC_control_fast_off.py" and "ServoPi.py". 
+
+On the Laptop side, you can either use a simple GUI to change channel voltages ("GUI_laptop.py", simply run it to open the GUI) or run the "pc_server_functions.py" module and use the functions within to communicate with the Pi.
+
 
 ## SMXM7X API
 The SMXM7X API folder contains scripts for using a Sumix M7x model (M71,M72,M73) CMOS camera in Python scripts. It was coded following [this](https://riptutorial.com/cython/example/11296/wrapping-a-dll--cplusplus-to-cython-to-python) tutorial. Please recompile these files before using the camera.
