@@ -1,12 +1,17 @@
+''' THIS IS A SIMPLE GUI TO RUN ON THE CLIENT (PC)....
+It allows to easily change voltage (0-150) or duty cycle (0-4095) on 5 actuators: select the wanted options on the right,
+type the desired numbers and press set or set all. all off turns all channels to 0.
+The client will then connect to the server and send the configuration. server shutdown will close the server on the pi.
+''' 
+
 
 import tkinter as tk
 from tkinter import ttk
-import time
 
 #import sys
-#sys.path.append('/home/pi/deformable_mirrors/client server')
+#sys.path.append('folder path')    #use this if pc_client_functions is in a different folder
 
-import pc_client_functions as client
+import pc_client_functions as client    #need to import pc_client_functions
 
 
 #------------------ Functions ---------------------------------------------
@@ -55,35 +60,9 @@ def alloff(channellist, Dac, valueflag):
         channels.append(i+1)
     client.sendconfig(values,channels,Daclist,valueflag)     
     return
+      
 
-def sendconfig2server(channellist):
-#    values = []
-#    for x in range(0,len(channellist),1):
-#        values.append(channellist[x].get())
-#    _ = '_'    
-#    string =_.join(values) 
-#    client.sendconfig(string)
-    return
-
-def snapcommand(channellist, folder):
-#    values = []
-#    for x in range(0,len(channellist),1):
-#        values.append(channellist[x].get())
-#    _ = '_'    
-#    string =_.join(values)
-#    client.snaprequest(folder,string)
-    return
-
-def callGA(channellist, iters, pop, parents, variability):
-#    values = []
-#    for x in range(0,len(channellist),1):
-#        values.append(int(channellist[x].get()))
-#    client.GAstuff(iters,pop,parents,variability,values)
-    return
-        
-    
-
-def choose_chan_numb(event):                        #spaghettissimus totalis
+def choose_chan_numb(event):                       
     n = chan_numb.get()
     global channellist 
     if n == '1':
@@ -183,45 +162,10 @@ if __name__ == "__main__":
     # tk.Button(text = '+10', command = lambda: plus10(int(ch5.get()),boardflag.get() ,5,valueflag.get(), channellist)).grid(row = 6, column = 7)
 
     #---------------------------------- Server-client connection -----------------------------------------------
-    folder = tk.StringVar()
-    folder.set('...')
-
-    sendconfigbutton = tk.Button(text = 'Send channel config', command = lambda: sendconfig2server(channellist)).grid(row = 4, column = 10)
-
-    save_snap = tk.Button(text = 'Take snap', command = lambda: snapcommand(channellist,folder.get())).grid(row = 5, column = 10)
-
-    shutdown_server = tk.Button(text = 'Shutdown server', command = lambda: client.sendstop()).grid(row = 6, column = 10)
-
-    tk.Label(main, text = "folder name").grid(row = 2, column = 9)
-    tk.Entry(main, textvariable = folder).grid(row = 2, column = 10)
-    tk.Button(text = 'select/create folder', command = lambda: client.folderselect(folder.get())).grid(row = 2, column = 11)
-
-
-    #----------------------------------------- GA part --------------------------------------------------------------------
-
-    iters = tk.StringVar()
-    iters.set('0')
-    pop = tk.StringVar()
-    pop.set('0')
-    parents = tk.StringVar()
-    parents.set('0')
-    variability = tk.StringVar()
-    variability.set('0')
-
     
-    tk.Entry(main, textvariable = iters).grid(row = 11, column = 4)
-    tk.Entry(main, textvariable = pop).grid(row = 12, column = 4)
-    tk.Entry(main, textvariable = parents).grid(row = 13, column = 4)
-    tk.Entry(main, textvariable = variability).grid(row = 14, column = 4)
-    
-    tk.Label(main , text = "GA STUFF BELOW").grid(row = 10, column = 4)
-    tk.Label(main , text = "Nunmber of iterations").grid(row = 11, column = 2)
-    tk.Label(main , text = "Population size").grid(row = 12, column = 2)
-    tk.Label(main , text = "Number of parents").grid(row = 13, column = 2)
-    tk.Label(main , text = "variability").grid(row = 14, column = 2)
 
-    tk.Button(text = 'Run GA', command = lambda: callGA(channellist,iters.get(),pop.get(),parents.get(),variability.get())).grid(row = 15, column = 2)
+    shutdown_server = tk.Button(text = 'Shutdown server', command = lambda: client.sendstop()).grid(row = 4, column = 10)
 
-    
+
     #--------------------------------- end loop ----------------------------------------------------------------------------
     main.mainloop()
