@@ -1,7 +1,7 @@
 # Deformable Mirrors
 
 ## SMXM7X API
-The SMXM7X API folder contains scripts for using a Sumix M7x model (M71,M72,M73) CMOS camera in Python scripts. It was coded following [this](https://riptutorial.com/cython/example/11296/wrapping-a-dll--cplusplus-to-cython-to-python) tutorial.
+The SMXM7X API folder contains scripts for using a Sumix M7x model (M71,M72,M73) CMOS camera in Python scripts. It was coded following [this](https://riptutorial.com/cython/example/11296/wrapping-a-dll--cplusplus-to-cython-to-python) tutorial. Please recompile these files before using the camera.
 
 Our system specifications and files/programs used:
 - Windows 10
